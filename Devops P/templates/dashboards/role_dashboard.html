@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<section class="dashboard-hero">
+	<div>
+		<p class="eyebrow">{{ role|upper }} ACCESS</p>
+		<h1>{{ title }}</h1>
+		<p class="hero-copy">{{ subtitle }}</p>
+		<p class="signed-in">Signed in as <strong>{{ user.email }}</strong></p>
+	</div>
+	<div class="hero-orb" aria-hidden="true">{{ user.first_name|first|upper }}</div>
+</section>
+<section class="dashboard-grid">
+	<a class="dashboard-card card-coral dashboard-link" href="{% url 'workspace' %}"><span class="card-icon">01</span><h2>Your workspace</h2><p>Your role-specific tools and activity will appear here.</p><span class="card-action">Open workspace &rarr;</span></a>
+	<a class="dashboard-card card-blue dashboard-link" href="{% url 'account_status' %}"><span class="card-icon">02</span><h2>Account status</h2><p>Your account is active and ready to use.</p><span class="card-action">View status &rarr;</span></a>
+	<a class="dashboard-card card-yellow dashboard-link" href="{% url 'next_step' %}"><span class="card-icon">03</span><h2>Next step</h2><p>Keep your profile details current for a smoother experience.</p><span class="card-action">See checklist &rarr;</span></a>
+</section>
+{% if user.is_staff or user.role == 'admin' %}
+<section class="management-banner"><div><p class="eyebrow">ADMIN TOOLS</p><h2>Account management</h2><p>Activate, deactivate, and update users from one place.</p></div><a class="button button-dark" href="{% url 'admin_users' %}">Manage users</a></section>
+{% endif %}
+{% endblock %}
