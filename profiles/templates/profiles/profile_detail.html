@@ -1,0 +1,127 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Dashboard</title>
+    <link rel="stylesheet" href="{% static 'profiles/styles.css' %}">
+</head>
+<body>
+    <div class="container">
+        <div class="dashboard-header">
+            <div>
+                <h1>{{ profile.user.username }}</h1>
+            </div>
+            <div class="header-actions">
+                <a href="{% url 'profile_form' %}">Edit Profile</a>
+                <a href="{% url 'logout' %}">Logout</a>
+            </div>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="success">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="dashboard">
+            <div class="panel">
+                <h3>Student Information</h3>
+                <div class="meta">
+                    <div><strong>Username</strong>{{ profile.user.username }}</div>
+                    <div><strong>Phone</strong>{{ profile.phone }}</div>
+                    <div><strong>Department</strong>{{ profile.department }}</div>
+                    <div><strong>Branch</strong>{{ profile.branch }}</div>
+                    <div><strong>CGPA</strong>{{ profile.cgpa }}</div>
+                    <div><strong>Backlogs</strong>{{ profile.backlogs }}</div>
+                    <div style="grid-column: 1 / -1;"><strong>Resume</strong>
+                        {% if profile.resume %}
+                            <a href="{{ profile.resume.url }}" target="_blank">View Resume</a>
+                        {% else %}
+                            <span class="empty">No resume uploaded</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="panel">
+                    <h3>Skills</h3>
+                    <ul class="list">
+                        {% for skill in skills %}
+                            <li>
+                                {{ skill.name }}
+                                <div class="buttons-row">
+                                    <a class="action-btn primary" href="{% url 'skill_edit' skill.pk %}">Edit</a>
+                                    <a class="action-btn danger" href="{% url 'skill_delete' skill.pk %}">Delete</a>
+                                </div>
+                            </li>
+                        {% empty %}
+                            <li class="empty">No skills added yet.</li>
+                        {% endfor %}
+                    </ul>
+                    <div class="buttons-row"><a class="action-btn primary" href="{% url 'skill_add' %}">Add Skill</a></div>
+                </div>
+
+                <div class="panel">
+                    <h3>Certifications</h3>
+                    <ul class="list">
+                        {% for cert in certifications %}
+                            <li>
+                                <strong>{{ cert.name }}</strong> - {{ cert.issuer }} ({{ cert.year }})
+                                <div class="buttons-row">
+                                    <a class="action-btn primary" href="{% url 'certification_edit' cert.pk %}">Edit</a>
+                                    <a class="action-btn danger" href="{% url 'certification_delete' cert.pk %}">Delete</a>
+                                </div>
+                            </li>
+                        {% empty %}
+                            <li class="empty">No certifications added yet.</li>
+                        {% endfor %}
+                    </ul>
+                    <div class="buttons-row"><a class="action-btn primary" href="{% url 'certification_add' %}">Add Certification</a></div>
+                </div>
+
+                <div class="panel">
+                    <h3>Projects</h3>
+                    <ul class="list">
+                        {% for project in projects %}
+                            <li>
+                                <strong>{{ project.title }}</strong><br>
+                                {{ project.description }}<br>
+                                <small>{{ project.technologies }}</small>
+                                <div class="buttons-row">
+                                    <a class="action-btn primary" href="{% url 'project_edit' project.pk %}">Edit</a>
+                                    <a class="action-btn danger" href="{% url 'project_delete' project.pk %}">Delete</a>
+                                </div>
+                            </li>
+                        {% empty %}
+                            <li class="empty">No projects added yet.</li>
+                        {% endfor %}
+                    </ul>
+                    <div class="buttons-row"><a class="action-btn primary" href="{% url 'project_add' %}">Add Project</a></div>
+                </div>
+
+                <div class="panel">
+                    <h3>Internships</h3>
+                    <ul class="list">
+                        {% for internship in internships %}
+                            <li>
+                                <strong>{{ internship.company }}</strong> - {{ internship.role }} ({{ internship.duration }})<br>
+                                {{ internship.description }}
+                                <div class="buttons-row">
+                                    <a class="action-btn primary" href="{% url 'internship_edit' internship.pk %}">Edit</a>
+                                    <a class="action-btn danger" href="{% url 'internship_delete' internship.pk %}">Delete</a>
+                                </div>
+                            </li>
+                        {% empty %}
+                            <li class="empty">No internships added yet.</li>
+                        {% endfor %}
+                    </ul>
+                    <div class="buttons-row"><a class="action-btn primary" href="{% url 'internship_add' %}">Add Internship</a></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

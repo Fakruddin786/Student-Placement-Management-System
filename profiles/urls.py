@@ -1,0 +1,41 @@
+from django.urls import path
+
+from .views import (
+    certification_add,
+    certification_delete,
+    certification_edit,
+    internship_add,
+    internship_delete,
+    internship_edit,
+    login_view,
+    logout_view,
+    profile_detail,
+    profile_form,
+    project_add,
+    project_delete,
+    project_edit,
+    root_redirect,
+    skill_add,
+    skill_delete,
+    skill_edit,
+)
+
+urlpatterns = [
+    path('', root_redirect, name='root_redirect'),
+    path('login/', login_view, name='login'),
+    path('logout/', logout_view, name='logout'),
+    path('profile/', profile_form, name='profile_form'),
+    path('profile/view/', profile_detail, name='profile_detail'),
+    path('skills/add/', skill_add, name='skill_add'),
+    path('skills/edit/<int:pk>/', skill_edit, name='skill_edit'),
+    path('skills/delete/<int:pk>/', skill_delete, name='skill_delete'),
+    path('certifications/add/', certification_add, name='certification_add'),
+    path('certifications/edit/<int:pk>/', certification_edit, name='certification_edit'),
+    path('certifications/delete/<int:pk>/', certification_delete, name='certification_delete'),
+    path('projects/add/', project_add, name='project_add'),
+    path('projects/edit/<int:pk>/', project_edit, name='project_edit'),
+    path('projects/delete/<int:pk>/', project_delete, name='project_delete'),
+    path('internships/add/', internship_add, name='internship_add'),
+    path('internships/edit/<int:pk>/', internship_edit, name='internship_edit'),
+    path('internships/delete/<int:pk>/', internship_delete, name='internship_delete'),
+]
