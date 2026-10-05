@@ -99,9 +99,10 @@ button {
 }
 
 .menu-item.active {
-  background: var(--primary-soft);
+  background: linear-gradient(90deg, var(--primary-soft), #f0f5ff);
   color: var(--primary-dark);
   font-weight: 600;
+  box-shadow: inset 0 0 0 1px rgba(44, 90, 229, 0.08);
 }
 
 .sidebar-footer {
@@ -395,6 +396,12 @@ select:focus {
   padding: 7px 10px;
   font-size: 0.75rem;
   font-weight: 600;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.app-actions button:hover {
+  transform: translateY(-1px);
+  opacity: 0.96;
 }
 
 .action-review { background: var(--primary-soft); color: var(--primary-dark); }
