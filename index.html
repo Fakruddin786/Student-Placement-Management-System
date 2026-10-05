@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Placement & Application Module</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand-row">
+          <div class="brand-icon">P</div>
+          <div>
+            <h1>Placement Module</h1>
+          </div>
+        </div>
+
+        <nav class="menu">
+          <button class="menu-item active">
+            <span>◫</span>
+            Dashboard
+          </button>
+          <button class="menu-item">
+            <span>▣</span>
+            Placement Drives
+          </button>
+          <button class="menu-item">
+            <span>◌</span>
+            Students
+          </button>
+          <button class="menu-item">
+            <span>✓</span>
+            Applications
+          </button>
+          <button class="menu-item">
+            <span>◎</span>
+            Eligibility
+          </button>
+          <button class="menu-item">
+            <span>⎇</span>
+            Reviews
+          </button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="mini-card">
+            <span class="dot green"></span>
+            Active cycle: 2026-27
+          </div>
+        </div>
+      </aside>
+
+      <main class="main-panel">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Student recruitment</p>
+            <h2>Placement and application workflow</h2>
+          </div>
+          <div class="top-actions">
+            <button class="ghost-btn">Export</button>
+            <button class="primary-btn">+ New drive</button>
+          </div>
+        </header>
+
+        <section class="kpi-grid">
+          <article class="kpi-card primary">
+            <span class="label">Active drives</span>
+            <strong id="activeDrivesCount">0</strong>
+            <small>Across 4 companies</small>
+          </article>
+          <article class="kpi-card blue">
+            <span class="label">Applicants</span>
+            <strong id="applicantCount">0</strong>
+            <small>Registered this cycle</small>
+          </article>
+          <article class="kpi-card green">
+            <span class="label">Shortlisted</span>
+            <strong id="shortlistCount">0</strong>
+            <small>Ready for interviews</small>
+          </article>
+          <article class="kpi-card orange">
+            <span class="label">Pending review</span>
+            <strong id="pendingReviewCount">0</strong>
+            <small>Requires action</small>
+          </article>
+        </section>
+
+        <section class="content-grid">
+          <div class="panel create-panel">
+            <div class="panel-head">
+              <h3>Create placement drive</h3>
+            </div>
+
+            <form id="driveForm">
+              <div class="form-grid">
+                <label>
+                  Drive name
+                  <input type="text" id="driveName" placeholder="e.g. Infosys Campus Drive" required />
+                </label>
+                <label>
+                  Company
+                  <input type="text" id="companyName" placeholder="e.g. Infosys" required />
+                </label>
+                <label>
+                  Eligibility
+                  <input type="text" id="eligibility" placeholder="CGPA >= 7.5, eligible branches" required />
+                </label>
+                <label>
+                  Mode
+                  <select id="mode">
+                    <option>On campus</option>
+                    <option>Virtual</option>
+                    <option>Hybrid</option>
+                  </select>
+                </label>
+                <label>
+                  Start date
+                  <input type="date" id="startDate" required />
+                </label>
+                <label>
+                  End date
+                  <input type="date" id="endDate" required />
+                </label>
+              </div>
+              <button type="submit" class="primary-btn wide">Save drive</button>
+            </form>
+          </div>
+
+          <div class="panel list-panel">
+            <div class="panel-head">
+              <h3>Placement drives</h3>
+            </div>
+            <ul id="driveList" class="drive-list"></ul>
+          </div>
+        </section>
+
+        <section class="panel pipeline-panel">
+          <div class="panel-head split-head">
+            <h3>Student application pipeline</h3>
+            <button id="addSampleApplication" class="ghost-btn">+ Add sample</button>
+          </div>
+
+          <div id="applicationList" class="application-list"></div>
+        </section>
+
+        <section class="panel table-panel">
+          <div class="panel-head split-head">
+            <h3>Student application tracker</h3>
+            <input type="text" id="searchStudent" class="search-input" placeholder="Search student" />
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Student</th>
+                  <th>Drive</th>
+                  <th>CGPA</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="studentTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
