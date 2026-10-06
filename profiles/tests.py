@@ -6,7 +6,18 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from .forms import StudentProfileForm
-from .models import Certification, Internship, Project, Skill, StudentProfile
+from .models import (
+    Application,
+    Certification,
+    CompanyProfile,
+    Internship,
+    JobPosting,
+    PlacementNotification,
+    PlacementOfficerProfile,
+    Project,
+    Skill,
+    StudentProfile,
+)
 
 User = get_user_model()
 
@@ -438,3 +449,209 @@ class UserIsolationAPITests(APITestCase):
 
         internship_response = self.client.get(reverse('internship-detail', args=[self.intern_b.id]))
         self.assertIn(internship_response.status_code, [status.HTTP_404_NOT_FOUND, status.HTTP_403_FORBIDDEN])
+
+
+class DashboardAndPlacementTests(TestCase):
+    def setUp(self):
+        # Student User
+        self.student_user = User.objects.create_user(username='john_student', password='secret123')
+        self.student_profile = StudentProfile.objects.create(
+            user=self.student_user,
+            phone='9998887776',
+            department='Computer Science',
+            branch='CS',
+            cgpa='8.50',
+            backlogs=0,
+        )
+
+        # Company User
+        self.company_user = User.objects.create_user(username='tech_corp', password='secret123')
+        self.company_profile = CompanyProfile.objects.create(
+            user=self.company_user,
+            company_name='TechCorp Systems',
+            industry='Software',
+        )
+
+        # Job Drive
+        self.job = JobPosting.objects.create(
+            company=self.company_profile,
+            title='Software Engineer',
+            description='Develop backend microservices',
+            eligible_departments='Computer Science, IT',
+            min_cgpa='7.50',
+            max_backlogs=1,
+            package_lpa='12.50',
+            location='Bangalore',
+            status='Open',
+        )
+
+        # Placement Officer User
+        self.officer_user = User.objects.create_superuser(username='officer_admin', password='secret123', email='admin@campus.edu')
+        self.officer_profile = PlacementOfficerProfile.objects.create(
+            user=self.officer_user,
+            department='Placement Cell',
+            designation='Head Placement Officer',
+        )
+
+    def test_dashboard_home_redirect_by_role(self):
+        # Officer redirect
+        self.client.force_login(self.officer_user)
+        res_officer = self.client.get(reverse('dashboard'))
+        self.assertRedirects(res_officer, reverse('officer_dashboard'))
+
+        # Company redirect
+        self.client.force_login(self.company_user)
+        res_company = self.client.get(reverse('dashboard'))
+        self.assertRedirects(res_company, reverse('company_dashboard'))
+
+        # Student redirect
+        self.client.force_login(self.student_user)
+        res_student = self.client.get(reverse('dashboard'))
+        self.assertRedirects(res_student, reverse('student_dashboard'))
+
+    def test_student_dashboard_and_job_application(self):
+        self.client.force_login(self.student_user)
+        response = self.client.get(reverse('student_dashboard'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'TechCorp Systems')
+        self.assertContains(response, 'Software Engineer')
+
+        # Apply to job
+        apply_res = self.client.post(reverse('apply_job', args=[self.job.id]), follow=True)
+        self.assertEqual(apply_res.status_code, 200)
+        self.assertTrue(Application.objects.filter(student=self.student_profile, job=self.job).exists())
+
+        # Verify application status displayed on student dashboard
+        dash_res = self.client.get(reverse('student_dashboard'))
+        self.assertContains(dash_res, 'Applied')
+
+    def test_company_job_posting_and_applicant_status_update(self):
+        # Apply student to job
+        app = Application.objects.create(student=self.student_profile, job=self.job, status='Applied')
+
+        # Company login
+        self.client.force_login(self.company_user)
+
+        # Create new job drive
+        create_res = self.client.post(
+            reverse('job_posting_create'),
+            {
+                'title': 'Frontend Developer',
+                'description': 'React and UI work',
+                'eligible_departments': 'All',
+                'min_cgpa': '6.00',
+                'max_backlogs': 2,
+                'package_lpa': '8.00',
+                'status': 'Open',
+            },
+            follow=True,
+        )
+        self.assertEqual(create_res.status_code, 200)
+        self.assertTrue(JobPosting.objects.filter(title='Frontend Developer').exists())
+
+        # Update candidate status to Placed
+        update_res = self.client.post(
+            reverse('update_application_status', args=[app.id]),
+            {
+                'status': 'Placed',
+                'interview_notes': 'Selected in final round with 12.5 LPA package',
+            },
+            follow=True,
+        )
+        self.assertEqual(update_res.status_code, 200)
+
+        app.refresh_from_db()
+        self.assertEqual(app.status, 'Placed')
+
+        # Check placement notification generated for student
+        notification = PlacementNotification.objects.filter(user=self.student_user).first()
+        self.assertIsNotNone(notification)
+        self.assertIn('Placed', notification.message)
+
+    def test_officer_dashboard_and_department_company_statistics(self):
+        # Create extra student & application for dept statistics
+        student2_user = User.objects.create_user(username='mary_ece', password='secret123')
+        student2_profile = StudentProfile.objects.create(
+            user=student2_user,
+            phone='9991112223',
+            department='Electronics',
+            branch='ECE',
+            cgpa='9.10',
+            backlogs=0,
+        )
+        app = Application.objects.create(student=self.student_profile, job=self.job, status='Placed')
+
+        self.client.force_login(self.officer_user)
+        response = self.client.get(reverse('officer_dashboard'))
+        self.assertEqual(response.status_code, 200)
+
+        # Check KPI summary
+        self.assertContains(response, 'Computer Science')
+        self.assertContains(response, 'TechCorp Systems')
+        self.assertContains(response, '12.5')
+
+    def test_placement_notifications_and_mark_read(self):
+        notif = PlacementNotification.objects.create(
+            user=self.student_user,
+            title='Interview Scheduled',
+            message='Interview on Monday at 10 AM',
+            notification_type='Interview',
+        )
+
+        self.client.force_login(self.student_user)
+        res_list = self.client.get(reverse('placement_notifications'))
+        self.assertEqual(res_list.status_code, 200)
+        self.assertContains(res_list, 'Interview Scheduled')
+
+        res_read = self.client.get(reverse('mark_notification_read', args=[notif.id]), follow=True)
+        self.assertEqual(res_read.status_code, 200)
+
+        notif.refresh_from_db()
+        self.assertTrue(notif.is_read)
+
+    def test_placement_reports_and_csv_export(self):
+        Application.objects.create(student=self.student_profile, job=self.job, status='Placed')
+
+        self.client.force_login(self.officer_user)
+
+        # Web report
+        res_report = self.client.get(reverse('placement_reports'))
+        self.assertEqual(res_report.status_code, 200)
+        self.assertContains(res_report, 'john_student')
+        self.assertContains(res_report, 'Computer Science')
+
+        # CSV report
+        res_csv = self.client.get(reverse('placement_report_csv'))
+        self.assertEqual(res_csv.status_code, 200)
+        self.assertEqual(res_csv['Content-Type'], 'text/csv')
+        self.assertIn('john_student', res_csv.content.decode('utf-8'))
+        self.assertIn('TechCorp Systems', res_csv.content.decode('utf-8'))
+
+
+class PlacementAPITests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='api_student', password='secret123')
+        self.company_user = User.objects.create_user(username='api_company', password='secret123')
+        self.company = CompanyProfile.objects.create(user=self.company_user, company_name='API Tech')
+        self.job = JobPosting.objects.create(
+            company=self.company,
+            title='Backend Dev',
+            description='Python API',
+            package_lpa='10.00',
+        )
+
+    def test_placement_api_endpoints(self):
+        self.client.force_authenticate(user=self.user)
+
+        res_jobs = self.client.get(reverse('job-list'))
+        self.assertEqual(res_jobs.status_code, status.HTTP_200_OK)
+
+        res_companies = self.client.get(reverse('company-list'))
+        self.assertEqual(res_companies.status_code, status.HTTP_200_OK)
+
+        res_applications = self.client.get(reverse('application-list'))
+        self.assertEqual(res_applications.status_code, status.HTTP_200_OK)
+
+        res_notifications = self.client.get(reverse('notification-list'))
+        self.assertEqual(res_notifications.status_code, status.HTTP_200_OK)
+

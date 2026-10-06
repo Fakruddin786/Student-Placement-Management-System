@@ -1,0 +1,156 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Dashboard - Placement Management</title>
+    <link rel="stylesheet" href="{% static 'profiles/styles.css' %}">
+</head>
+<body>
+    <div class="container">
+        <div class="dashboard-header">
+            <div>
+                <h1>Company Dashboard</h1>
+                <p style="color: #94a3b8; margin: 4px 0 0;">Company: {{ company.company_name }}</p>
+            </div>
+            <div class="header-actions">
+                <a href="{% url 'company_dashboard' %}" class="active">Dashboard</a>
+                <a href="{% url 'job_posting_create' %}">+ Create Job Drive</a>
+                <a href="{% url 'logout' %}">Logout</a>
+            </div>
+        </div>
+
+        {% if messages %}
+            <div class="messages" style="margin-top: 18px;">
+                {% for message in messages %}
+                    <div class="success">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="stats-grid" style="margin-top: 24px;">
+            <div class="stat-card">
+                <span class="label">Job Drives Posted</span>
+                <span class="value">{{ total_jobs }}</span>
+                <span class="subtext">Active placement drives</span>
+            </div>
+            <div class="stat-card">
+                <span class="label">Total Applicants</span>
+                <span class="value">{{ total_applications }}</span>
+                <span class="subtext">Student applications received</span>
+            </div>
+            <div class="stat-card">
+                <span class="label">Shortlisted Candidates</span>
+                <span class="value">{{ total_shortlisted }}</span>
+                <span class="subtext">Selected for next rounds</span>
+            </div>
+            <div class="stat-card">
+                <span class="label">Placed / Hired</span>
+                <span class="value">{{ total_placed }}</span>
+                <span class="subtext">Final hires selected</span>
+            </div>
+        </div>
+
+        <div class="dashboard">
+            <div class="panel" style="grid-column: 1 / -1;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h3 style="margin: 0; border: none; padding: 0;">Applications Received</h3>
+                    <a href="{% url 'job_posting_create' %}" class="action-btn primary">+ Post New Job Drive</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Department</th>
+                                <th>CGPA / Backlogs</th>
+                                <th>Job Position</th>
+                                <th>Resume</th>
+                                <th>Applied Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for app in applications %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ app.student.user.username }}</strong><br>
+                                        <small style="color: #64748b;">📞 {{ app.student.phone|default:"N/A" }}</small>
+                                    </td>
+                                    <td>{{ app.student.department|default:"N/A" }} ({{ app.student.branch|default:"-" }})</td>
+                                    <td>
+                                        <strong>CGPA:</strong> {{ app.student.cgpa }}<br>
+                                        <small style="color: #64748b;">Backlogs: {{ app.student.backlogs }}</small>
+                                    </td>
+                                    <td>
+                                        <strong>{{ app.job.title }}</strong><br>
+                                        <small style="color: #64748b;">{{ app.job.package_lpa }} LPA</small>
+                                    </td>
+                                    <td>
+                                        {% if app.student.resume %}
+                                            <a href="{{ app.student.resume.url }}" target="_blank" style="color: #3b82f6; font-weight: 600;">📄 View Resume</a>
+                                        {% else %}
+                                            <span class="empty">No Resume</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ app.applied_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        {% if app.status == 'Placed' %}
+                                            <span class="badge badge-placed">Placed</span>
+                                        {% elif app.status == 'Shortlisted' %}
+                                            <span class="badge badge-shortlisted">Shortlisted</span>
+                                        {% elif app.status == 'Interview Scheduled' %}
+                                            <span class="badge badge-interview">Interview Scheduled</span>
+                                        {% elif app.status == 'Rejected' %}
+                                            <span class="badge badge-rejected">Rejected</span>
+                                        {% else %}
+                                            <span class="badge badge-applied">Applied</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'update_application_status' app.id %}" class="action-btn primary" style="padding: 6px 12px; font-size: 0.82rem;">Update Status</a>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="8" class="empty">No applications received yet for your job drives.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="panel" style="grid-column: 1 / -1;">
+                <h3>Our Job Placement Drives</h3>
+                <ul class="list">
+                    {% for job in jobs %}
+                        <li>
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+                                <div>
+                                    <strong>{{ job.title }}</strong>
+                                    <div style="font-size: 0.9rem; color: #475569; margin-top: 4px;">
+                                        💰 Package: <strong>{{ job.package_lpa }} LPA</strong> | 📍 Location: {{ job.location|default:"Not specified" }} | Status: <span class="badge {% if job.status == 'Open' %}badge-open{% else %}badge-closed{% endif %}">{{ job.status }}</span>
+                                    </div>
+                                    <div style="font-size: 0.82rem; color: #64748b; margin-top: 4px;">
+                                        Min CGPA: {{ job.min_cgpa }} | Max Backlogs: {{ job.max_backlogs }} | Eligible Depts: {{ job.eligible_departments }}
+                                    </div>
+                                    <p style="font-size: 0.88rem; margin: 6px 0 0; color: #334155;">{{ job.description|truncatewords:25 }}</p>
+                                </div>
+                                <div style="font-size: 0.85rem; text-align: right; color: #64748b;">
+                                    Posted: {{ job.created_at|date:"M d, Y" }}<br>
+                                    Applicants: <strong>{{ job.applications.count }}</strong>
+                                </div>
+                            </div>
+                        </li>
+                    {% empty %}
+                        <li class="empty">No job drives posted yet. Click "+ Create Job Drive" above to post your first placement drive.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

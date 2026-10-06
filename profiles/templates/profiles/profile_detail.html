@@ -14,6 +14,7 @@
                 <h1>{{ profile.user.username }}</h1>
             </div>
             <div class="header-actions">
+                <a href="{% url 'dashboard' %}">Dashboard</a>
                 <a href="{% url 'profile_form' %}">Edit Profile</a>
                 <a href="{% url 'logout' %}">Logout</a>
             </div>

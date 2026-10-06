@@ -1,0 +1,217 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Placement Officer Dashboard & Analytics</title>
+    <link rel="stylesheet" href="{% static 'profiles/styles.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="dashboard-header">
+            <div>
+                <h1>Placement Officer Dashboard</h1>
+                <p style="color: #94a3b8; margin: 4px 0 0;">Placement Statistics, Analytics & Reports</p>
+            </div>
+            <div class="header-actions">
+                <a href="{% url 'officer_dashboard' %}" class="active">Dashboard</a>
+                <a href="{% url 'placement_reports' %}">Placement Reports</a>
+                <a href="{% url 'placement_report_csv' %}" class="primary-btn" style="padding: 8px 14px; font-size: 0.85rem;">📥 Export CSV</a>
+                <a href="{% url 'logout' %}">Logout</a>
+            </div>
+        </div>
+
+        {% if messages %}
+            <div class="messages" style="margin-top: 18px;">
+                {% for message in messages %}
+                    <div class="success">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Overall KPI Cards -->
+        <div class="stats-grid" style="margin-top: 24px;">
+            <div class="stat-card">
+                <span class="label">Total Students</span>
+                <span class="value">{{ total_students }}</span>
+                <span class="subtext">Registered candidates</span>
+            </div>
+            <div class="stat-card">
+                <span class="label">Total Companies</span>
+                <span class="value">{{ total_companies }}</span>
+                <span class="subtext">Recruiting partners</span>
+            </div>
+            <div class="stat-card">
+                <span class="label">Total Applications</span>
+                <span class="value">{{ total_applications }}</span>
+                <span class="subtext">Applications submitted</span>
+            </div>
+            <div class="stat-card">
+                <span class="label">Total Placements</span>
+                <span class="value">{{ total_placed_students }}</span>
+                <span class="subtext">Successfully placed</span>
+            </div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #fff;">
+                <span class="label" style="color: #94a3b8;">Placement Rate</span>
+                <span class="value" style="color: #38bdf8;">{{ placement_rate }}%</span>
+                <span class="subtext" style="color: #cbd5e1;">Overall success rate</span>
+            </div>
+        </div>
+
+        <!-- Charts and Graphs Section -->
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3>Department Placement Rates (%)</h3>
+                <div class="chart-container">
+                    <canvas id="deptPlacementChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3>Application & Interview Status</h3>
+                <div class="chart-container">
+                    <canvas id="statusDoughnutChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard" style="grid-template-columns: 1fr; margin-top: 24px;">
+            <!-- Department-wise Statistics -->
+            <div class="panel">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h3 style="margin: 0; border: none; padding: 0;">Department-Wise Placement Statistics</h3>
+                    <a href="{% url 'placement_reports' %}" style="font-size: 0.85rem; font-weight: 600; color: #3b82f6;">View Full Reports &rarr;</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Department</th>
+                                <th>Total Students</th>
+                                <th>Placed</th>
+                                <th>Unplaced</th>
+                                <th>Placement Rate</th>
+                                <th>Average Package (LPA)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ds in dept_stats %}
+                                <tr>
+                                    <td><strong>{{ ds.department }}</strong></td>
+                                    <td>{{ ds.total_students }}</td>
+                                    <td><span class="badge badge-placed">{{ ds.placed_students }}</span></td>
+                                    <td>{{ ds.unplaced_students }}</td>
+                                    <td><strong>{{ ds.placement_rate }}%</strong></td>
+                                    <td>{{ ds.avg_package }} LPA</td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="6" class="empty">No department statistics available yet. Add student profiles to see data.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Company-wise Statistics -->
+            <div class="panel">
+                <h3>Company-Wise Placement Statistics</h3>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Company Name</th>
+                                <th>Job Drives Posted</th>
+                                <th>Applications Received</th>
+                                <th>Interviews Conducted</th>
+                                <th>Students Placed</th>
+                                <th>Average Package Offered</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cs in company_stats %}
+                                <tr>
+                                    <td><strong>{{ cs.company_name }}</strong></td>
+                                    <td>{{ cs.jobs_posted }}</td>
+                                    <td>{{ cs.total_applications }}</td>
+                                    <td>{{ cs.interviews }}</td>
+                                    <td><span class="badge badge-placed">{{ cs.placed }}</span></td>
+                                    <td>{{ cs.avg_package }} LPA</td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="6" class="empty">No company statistics available yet. Post job drives to see data.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart.js Render Script -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Department Bar Chart
+            const deptCtx = document.getElementById('deptPlacementChart').getContext('2d');
+            new Chart(deptCtx, {
+                type: 'bar',
+                data: {
+                    labels: {{ chart_dept_labels|safe }},
+                    datasets: [{
+                        label: 'Placement Rate (%)',
+                        data: {{ chart_dept_rates|safe }},
+                        backgroundColor: 'rgba(59, 130, 246, 0.75)',
+                        borderColor: '#1d4ed8',
+                        borderWidth: 1,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { callback: function(value) { return value + "%"; } }
+                        }
+                    }
+                }
+            });
+
+            // Application Status Doughnut Chart
+            const statusCtx = document.getElementById('statusDoughnutChart').getContext('2d');
+            new Chart(statusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Applied', 'Shortlisted', 'Interview Scheduled', 'Placed', 'Rejected'],
+                    datasets: [{
+                        data: [
+                            {{ app_status_counts.Applied }},
+                            {{ app_status_counts.Shortlisted }},
+                            {{ app_status_counts.Interview_Scheduled }},
+                            {{ app_status_counts.Placed }},
+                            {{ app_status_counts.Rejected }}
+                        ],
+                        backgroundColor: [
+                            '#94a3b8',
+                            '#3b82f6',
+                            '#f59e0b',
+                            '#10b981',
+                            '#ef4444'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        });
+    </script>
+</body>
+</html>
