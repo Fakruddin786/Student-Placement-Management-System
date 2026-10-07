@@ -1,33 +1,42 @@
-from functools import wraps
-
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth.views import redirect_to_login
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
 from .forms import LoginForm, RegistrationForm, UserManagementForm
 from .models import User
+from .permissions import permission_required
+
+
+ROLE_DASHBOARD_ROUTES = {
+	User.Role.STUDENT: 'student_dashboard',
+	User.Role.COMPANY: 'company_dashboard',
+	User.Role.OFFICER: 'officer_dashboard',
+	User.Role.ADMIN: 'admin_dashboard',
+}
+
+
+def role_dashboard_url(user):
+	return reverse(ROLE_DASHBOARD_ROUTES.get(user.role, 'dashboard'))
 
 
 def register_view(request):
 	if request.user.is_authenticated:
-		return redirect('dashboard')
+		return redirect(role_dashboard_url(request.user))
 	form = RegistrationForm(request.POST or None)
 	if request.method == 'POST' and form.is_valid():
 		user = form.save()
 		login(request, user)
-		return redirect('dashboard')
+		return redirect(role_dashboard_url(user))
 	return render(request, 'accounts/register.html', {'form': form})
 
 
 def login_view(request):
 	if request.user.is_authenticated:
-		if request.user.is_staff or request.user.role == User.Role.ADMIN:
-			return redirect('dashboard')
-		logout(request)
+		return redirect(role_dashboard_url(request.user))
 	form = LoginForm(request.POST or None)
 	if request.method == 'POST' and form.is_valid():
 		user = authenticate(request, email=form.cleaned_data['email'], password=form.cleaned_data['password'])
@@ -35,11 +44,12 @@ def login_view(request):
 			form.add_error(None, 'Invalid email or password, or this account is inactive.')
 		else:
 			login(request, user)
-			return redirect(request.GET.get('next') or reverse('dashboard'))
+			return redirect(role_dashboard_url(user))
 	return render(request, 'accounts/login.html', {'form': form})
 
 
 @login_required
+@require_POST
 def logout_view(request):
 	logout(request)
 	return redirect('login')
@@ -50,7 +60,7 @@ def dashboard_view(request):
 	dashboard_data = {
 		User.Role.STUDENT: ('Student dashboard', 'Track your applications and opportunities.'),
 		User.Role.COMPANY: ('Company dashboard', 'Manage your opportunities and connect with students.'),
-		User.Role.OFFICER: ('Officer dashboard', 'Review accounts and support platform activity.'),
+		User.Role.OFFICER: ('Placement Officer dashboard', 'Review accounts and support platform activity.'),
 		User.Role.ADMIN: ('Admin dashboard', 'Manage users, roles, and account access.'),
 	}
 	title, subtitle = dashboard_data.get(request.user.role, ('Dashboard', 'Welcome to your account portal.'))
@@ -61,7 +71,7 @@ def dashboard_view(request):
 	})
 
 
-@login_required
+@permission_required('workspace.view')
 def workspace_view(request):
 	return render(request, 'dashboards/tool_page.html', {
 		'page_title': 'Your workspace',
@@ -71,7 +81,7 @@ def workspace_view(request):
 	})
 
 
-@login_required
+@permission_required('account_status.view')
 def account_status_view(request):
 	return render(request, 'dashboards/tool_page.html', {
 		'page_title': 'Account status',
@@ -81,7 +91,7 @@ def account_status_view(request):
 	})
 
 
-@login_required
+@permission_required('next_step.view')
 def next_step_view(request):
 	return render(request, 'dashboards/tool_page.html', {
 		'page_title': 'Next step',
@@ -91,33 +101,20 @@ def next_step_view(request):
 	})
 
 
-def role_required(*roles):
-	def decorator(view_func):
-		@wraps(view_func)
-		def wrapped(request, *args, **kwargs):
-			if not request.user.is_authenticated:
-				return redirect_to_login(request.get_full_path())
-			if request.user.role not in roles:
-				return HttpResponseForbidden('You do not have permission to access this page.')
-			return view_func(request, *args, **kwargs)
-		return wrapped
-	return decorator
-
-
 def role_dashboard(role, title):
-	@role_required(role)
+	@permission_required(f'dashboard.{role}.view')
 	def dashboard(request):
 		return render(request, 'dashboards/role_dashboard.html', {'title': title, 'role': role})
 	return dashboard
 
 
-@user_passes_test(lambda user: user.is_authenticated and (user.is_staff or user.role == User.Role.ADMIN))
+@permission_required('users.view')
 def admin_users_view(request):
 	users = User.objects.order_by('email')
 	return render(request, 'accounts/admin_users.html', {'users': users})
 
 
-@user_passes_test(lambda user: user.is_authenticated and (user.is_staff or user.role == User.Role.ADMIN))
+@permission_required('users.activate')
 def toggle_user_active(request, user_id):
 	if request.method != 'POST':
 		return HttpResponseForbidden('Only POST requests can change account status.')
@@ -131,7 +128,7 @@ def toggle_user_active(request, user_id):
 	return redirect('admin_users')
 
 
-@user_passes_test(lambda user: user.is_authenticated and (user.is_staff or user.role == User.Role.ADMIN))
+@permission_required('users.edit')
 def edit_user_view(request, user_id):
 	user = get_object_or_404(User, pk=user_id)
 	form = UserManagementForm(request.POST or None, instance=user)

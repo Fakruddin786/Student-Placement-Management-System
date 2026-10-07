@@ -14,21 +14,22 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
-from django.contrib.auth import logout
+from django.shortcuts import redirect
 from django.urls import include, path
 from django.views.generic import RedirectView
 
+from accounts.admin import role_admin_site
+
 
 def admin_login_view(request, *args, **kwargs):
-    if request.user.is_authenticated and not (request.user.is_staff or request.user.role == 'admin'):
-        logout(request)
-    return admin.site.login(request, *args, **kwargs)
+    if request.user.is_authenticated and request.user.role != 'admin':
+        return redirect('dashboard')
+    return role_admin_site.login(request, *args, **kwargs)
 
 
 urlpatterns = [
     path('admin/login/', admin_login_view, name='admin_login'),
-    path('admin/', admin.site.urls),
+    path('admin/', role_admin_site.urls),
     path('', include('accounts.urls')),
     path('', RedirectView.as_view(pattern_name='login', permanent=False)),
 ]
