@@ -1,0 +1,120 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Placement Reports & Analytics</title>
+    <link rel="stylesheet" href="{% static 'profiles/styles.css' %}">
+</head>
+<body>
+    <div class="container">
+        <div class="dashboard-header">
+            <div>
+                <h1>Placement Reports & Data Export</h1>
+                <p style="color: #94a3b8; margin: 4px 0 0;">Filter and generate placement summary reports</p>
+            </div>
+            <div class="header-actions">
+                <a href="{% url 'officer_dashboard' %}">&larr; Back to Dashboard</a>
+                <a href="{% url 'placement_report_csv' %}?status={{ selected_status }}&department={{ selected_dept }}" class="primary-btn" style="padding: 8px 16px;">📥 Export CSV Report</a>
+                <a href="{% url 'logout' %}">Logout</a>
+            </div>
+        </div>
+
+        <div class="panel" style="margin-top: 24px;">
+            <h3>Filter Report Criteria</h3>
+            <form method="get" style="display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end;">
+                <div style="flex: 1; min-width: 180px;">
+                    <label for="department" style="font-size: 0.85rem; font-weight: 700; color: #475569;">Department</label>
+                    <select name="department" id="department">
+                        <option value="">-- All Departments --</option>
+                        {% for dept in departments %}
+                            <option value="{{ dept }}" {% if selected_dept == dept %}selected{% endif %}>{{ dept }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div style="flex: 1; min-width: 180px;">
+                    <label for="status" style="font-size: 0.85rem; font-weight: 700; color: #475569;">Application Status</label>
+                    <select name="status" id="status">
+                        <option value="">-- All Statuses --</option>
+                        {% for status_choice in statuses %}
+                            <option value="{{ status_choice }}" {% if selected_status == status_choice %}selected{% endif %}>{{ status_choice }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="primary-btn" style="padding: 10px 18px;">Filter Results</button>
+                    <a href="{% url 'placement_reports' %}" class="secondary-btn" style="padding: 10px 18px;">Reset</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="panel" style="margin-top: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h3 style="margin: 0; border: none; padding: 0;">Placement Data Report</h3>
+                <span style="font-size: 0.88rem; color: #64748b;">Showing <strong>{{ applications.count }}</strong> record(s)</span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Department</th>
+                            <th>CGPA</th>
+                            <th>Company</th>
+                            <th>Job Title</th>
+                            <th>Package (LPA)</th>
+                            <th>Status</th>
+                            <th>Applied Date</th>
+                            <th>Interview Schedule</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for app in applications %}
+                            <tr>
+                                <td>
+                                    <strong>{{ app.student.user.username }}</strong><br>
+                                    <small style="color: #64748b;">📞 {{ app.student.phone|default:"N/A" }}</small>
+                                </td>
+                                <td>{{ app.student.department|default:"N/A" }}</td>
+                                <td>{{ app.student.cgpa }}</td>
+                                <td><strong>{{ app.job.company.company_name }}</strong></td>
+                                <td>{{ app.job.title }}</td>
+                                <td>{{ app.job.package_lpa }} LPA</td>
+                                <td>
+                                    {% if app.status == 'Placed' %}
+                                        <span class="badge badge-placed">Placed</span>
+                                    {% elif app.status == 'Shortlisted' %}
+                                        <span class="badge badge-shortlisted">Shortlisted</span>
+                                    {% elif app.status == 'Interview Scheduled' %}
+                                        <span class="badge badge-interview">Interview Scheduled</span>
+                                    {% elif app.status == 'Rejected' %}
+                                        <span class="badge badge-rejected">Rejected</span>
+                                    {% else %}
+                                        <span class="badge badge-applied">Applied</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ app.applied_at|date:"M d, Y" }}</td>
+                                <td>
+                                    {% if app.interview_date %}
+                                        <small style="color: #0369a1;">📅 {{ app.interview_date|date:"M d, Y H:i" }}</small>
+                                    {% else %}
+                                        <span class="empty">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="9" class="empty">No placement records matched the selected criteria.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

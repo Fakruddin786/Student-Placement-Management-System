@@ -1,0 +1,88 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - Placement Management</title>
+    <link rel="stylesheet" href="{% static 'profiles/styles.css' %}">
+</head>
+<body>
+    <div class="page-shell">
+        <div class="card">
+            <h2>{{ title }}</h2>
+            <form method="post">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="error" style="margin-bottom: 14px;">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <div class="form-grid">
+                    <div class="field" style="grid-column: 1 / -1;">
+                        <label for="{{ form.title.id_for_label }}">Job Title</label>
+                        {{ form.title }}
+                        {% if form.title.errors %}<ul class="errorlist">{% for err in form.title.errors %}<li>{{ err }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+
+                    <div class="field" style="grid-column: 1 / -1;">
+                        <label for="{{ form.description.id_for_label }}">Job Description & Responsibilities</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}<ul class="errorlist">{% for err in form.description.errors %}<li>{{ err }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+
+                    <div class="field">
+                        <label for="{{ form.eligible_departments.id_for_label }}">Eligible Departments</label>
+                        {{ form.eligible_departments }}
+                        <small style="color: #64748b;">e.g., "CSE, ECE" or "All"</small>
+                        {% if form.eligible_departments.errors %}<ul class="errorlist">{% for err in form.eligible_departments.errors %}<li>{{ err }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+
+                    <div class="field">
+                        <label for="{{ form.package_lpa.id_for_label }}">Package (LPA)</label>
+                        {{ form.package_lpa }}
+                        {% if form.package_lpa.errors %}<ul class="errorlist">{% for err in form.package_lpa.errors %}<li>{{ err }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+
+                    <div class="field">
+                        <label for="{{ form.min_cgpa.id_for_label }}">Minimum CGPA Requirement</label>
+                        {{ form.min_cgpa }}
+                        {% if form.min_cgpa.errors %}<ul class="errorlist">{% for err in form.min_cgpa.errors %}<li>{{ err }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+
+                    <div class="field">
+                        <label for="{{ form.max_backlogs.id_for_label }}">Maximum Backlogs Allowed</label>
+                        {{ form.max_backlogs }}
+                        {% if form.max_backlogs.errors %}<ul class="errorlist">{% for err in form.max_backlogs.errors %}<li>{{ err }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+
+                    <div class="field">
+                        <label for="{{ form.location.id_for_label }}">Job Location</label>
+                        {{ form.location }}
+                        {% if form.location.errors %}<ul class="errorlist">{% for err in form.location.errors %}<li>{{ err }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+
+                    <div class="field">
+                        <label for="{{ form.deadline.id_for_label }}">Application Deadline</label>
+                        {{ form.deadline }}
+                        {% if form.deadline.errors %}<ul class="errorlist">{% for err in form.deadline.errors %}<li>{{ err }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+
+                    <div class="field" style="grid-column: 1 / -1;">
+                        <label for="{{ form.status.id_for_label }}">Posting Status</label>
+                        {{ form.status }}
+                        {% if form.status.errors %}<ul class="errorlist">{% for err in form.status.errors %}<li>{{ err }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="primary-btn">Save Job Drive</button>
+                    <a href="{% url cancel_url %}" class="secondary-btn">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

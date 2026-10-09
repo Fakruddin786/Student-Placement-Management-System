@@ -1,0 +1,59 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Placement Notifications</title>
+    <link rel="stylesheet" href="{% static 'profiles/styles.css' %}">
+</head>
+<body>
+    <div class="container">
+        <div class="dashboard-header">
+            <div>
+                <h1>Placement Notifications</h1>
+                <p style="color: #94a3b8; margin: 4px 0 0;">Updates regarding application statuses, interview schedules & placements</p>
+            </div>
+            <div class="header-actions">
+                <a href="{% url 'dashboard' %}">&larr; Back to Dashboard</a>
+                <a href="{% url 'logout' %}">Logout</a>
+            </div>
+        </div>
+
+        {% if messages %}
+            <div class="messages" style="margin-top: 18px;">
+                {% for message in messages %}
+                    <div class="success">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="panel" style="margin-top: 24px;">
+            <h3>All Notifications</h3>
+            <ul class="notif-list">
+                {% for notif in notifications %}
+                    <li class="notif-item {% if not notif.is_read %}unread{% endif %}">
+                        <div>
+                            <div class="notif-title">
+                                {% if notif.notification_type == 'Placement' %}🎉 {% elif notif.notification_type == 'Interview' %}📅 {% endif %}
+                                {{ notif.title }}
+                            </div>
+                            <div class="notif-msg">{{ notif.message }}</div>
+                            <div class="notif-time">{{ notif.created_at|date:"M d, Y H:i" }}</div>
+                        </div>
+                        <div>
+                            {% if not notif.is_read %}
+                                <a href="{% url 'mark_notification_read' notif.id %}" class="action-btn primary" style="padding: 6px 12px; font-size: 0.8rem;">Mark as Read</a>
+                            {% else %}
+                                <span class="empty" style="font-size: 0.8rem;">Read</span>
+                            {% endif %}
+                        </div>
+                    </li>
+                {% empty %}
+                    <li class="empty">No notifications available.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

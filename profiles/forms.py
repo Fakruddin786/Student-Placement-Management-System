@@ -4,7 +4,17 @@ from decimal import Decimal
 from django import forms
 from django.core.exceptions import ValidationError
 
-from .models import Certification, Internship, Project, Skill, StudentProfile
+from .models import (
+    Application,
+    Certification,
+    CompanyProfile,
+    Internship,
+    JobPosting,
+    PlacementNotification,
+    Project,
+    Skill,
+    StudentProfile,
+)
 
 ALLOWED_RESUME_EXTENSIONS = {'.pdf', '.doc', '.docx'}
 MAX_RESUME_SIZE = 5 * 1024 * 1024
@@ -193,3 +203,66 @@ class InternshipForm(forms.ModelForm):
         if not description:
             raise ValidationError('Description is required.')
         return description
+
+
+class CompanyProfileForm(forms.ModelForm):
+    class Meta:
+        model = CompanyProfile
+        fields = ['company_name', 'industry', 'website', 'contact_email', 'description']
+
+    def clean_company_name(self):
+        name = self.cleaned_data.get('company_name')
+        if not name or not str(name).strip():
+            raise ValidationError('Company name is required.')
+        return str(name).strip()
+
+
+class JobPostingForm(forms.ModelForm):
+    deadline = forms.DateField(
+        widget=forms.DateInput(attrs={'type': 'date'}),
+        required=False,
+    )
+
+    class Meta:
+        model = JobPosting
+        fields = [
+            'title',
+            'description',
+            'eligible_departments',
+            'min_cgpa',
+            'max_backlogs',
+            'package_lpa',
+            'location',
+            'deadline',
+            'status',
+        ]
+
+    def clean_title(self):
+        title = self.cleaned_data.get('title')
+        if not title or not str(title).strip():
+            raise ValidationError('Job title is required.')
+        return str(title).strip()
+
+    def clean_min_cgpa(self):
+        cgpa = self.cleaned_data.get('min_cgpa')
+        if cgpa is not None and (cgpa < Decimal('0') or cgpa > Decimal('10')):
+            raise ValidationError('Minimum CGPA must be between 0 and 10.')
+        return cgpa
+
+
+class ApplicationStatusForm(forms.ModelForm):
+    interview_date = forms.DateTimeField(
+        widget=forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+        required=False,
+    )
+
+    class Meta:
+        model = Application
+        fields = ['status', 'interview_date', 'interview_notes']
+
+
+class NotificationForm(forms.ModelForm):
+    class Meta:
+        model = PlacementNotification
+        fields = ['title', 'message', 'notification_type']
+

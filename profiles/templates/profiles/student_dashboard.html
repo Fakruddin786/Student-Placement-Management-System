@@ -1,0 +1,181 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - Placement Management</title>
+    <link rel="stylesheet" href="{% static 'profiles/styles.css' %}">
+</head>
+<body>
+    <div class="container">
+        <div class="dashboard-header">
+            <div>
+                <h1>Student Dashboard</h1>
+                <p style="color: #94a3b8; margin: 4px 0 0;">Welcome, {{ profile.user.username }}</p>
+            </div>
+            <div class="header-actions">
+                <a href="{% url 'student_dashboard' %}" class="active">Dashboard</a>
+                <a href="{% url 'profile_detail' %}">My Profile</a>
+                <a href="{% url 'placement_notifications' %}">
+                    Notifications
+                    {% if unread_notifications_count > 0 %}
+                        <span class="badge badge-placed" style="margin-left: 6px;">{{ unread_notifications_count }}</span>
+                    {% endif %}
+                </a>
+                <a href="{% url 'logout' %}">Logout</a>
+            </div>
+        </div>
+
+        {% if messages %}
+            <div class="messages" style="margin-top: 18px;">
+                {% for message in messages %}
+                    <div class="success">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% if placed_application %}
+            <div class="placement-banner" style="margin-top: 24px;">
+                <h3>🎉 Placements Status: PLACED</h3>
+                <p>Congratulations! You have been selected for <strong>{{ placed_application.job.title }}</strong> at <strong>{{ placed_application.job.company.company_name }}</strong> with a package of <strong>{{ placed_application.job.package_lpa }} LPA</strong>.</p>
+            </div>
+        {% endif %}
+
+        <div class="stats-grid" style="margin-top: 24px;">
+            <div class="stat-card">
+                <span class="label">Total Applications</span>
+                <span class="value">{{ total_applications_count }}</span>
+                <span class="subtext">Jobs applied to date</span>
+            </div>
+            <div class="stat-card">
+                <span class="label">Interviews Scheduled</span>
+                <span class="value">{{ interviews_count }}</span>
+                <span class="subtext">Active interview rounds</span>
+            </div>
+            <div class="stat-card">
+                <span class="label">Academic CGPA</span>
+                <span class="value">{{ profile.cgpa }}</span>
+                <span class="subtext">Dept: {{ profile.department|default:"N/A" }}</span>
+            </div>
+            <div class="stat-card">
+                <span class="label">Active Backlogs</span>
+                <span class="value">{{ profile.backlogs }}</span>
+                <span class="subtext">Branch: {{ profile.branch|default:"N/A" }}</span>
+            </div>
+        </div>
+
+        <div class="dashboard">
+            <div class="panel">
+                <h3>My Applications & Interview Status</h3>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Job Title</th>
+                                <th>Company</th>
+                                <th>Applied On</th>
+                                <th>Status</th>
+                                <th>Interview / Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for app in applications %}
+                                <tr>
+                                    <td><strong>{{ app.job.title }}</strong></td>
+                                    <td>{{ app.job.company.company_name }}</td>
+                                    <td>{{ app.applied_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        {% if app.status == 'Placed' %}
+                                            <span class="badge badge-placed">Placed</span>
+                                        {% elif app.status == 'Shortlisted' %}
+                                            <span class="badge badge-shortlisted">Shortlisted</span>
+                                        {% elif app.status == 'Interview Scheduled' %}
+                                            <span class="badge badge-interview">Interview Scheduled</span>
+                                        {% elif app.status == 'Rejected' %}
+                                            <span class="badge badge-rejected">Rejected</span>
+                                        {% else %}
+                                            <span class="badge badge-applied">Applied</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if app.interview_date %}
+                                            <small style="color: #0369a1; font-weight: 600;">📅 {{ app.interview_date|date:"M d, Y H:i" }}</small><br>
+                                        {% endif %}
+                                        {% if app.interview_notes %}
+                                            <small style="color: #475569;">{{ app.interview_notes }}</small>
+                                        {% else %}
+                                            <span class="empty">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="5" class="empty">You have not applied to any job drives yet.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div>
+                <div class="panel">
+                    <h3>Available Placement Drives</h3>
+                    <ul class="list">
+                        {% for item in available_jobs %}
+                            <li>
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+                                    <div>
+                                        <strong>{{ item.job.title }}</strong>
+                                        <div style="font-size: 0.88rem; color: #475569; margin-top: 2px;">
+                                            🏢 {{ item.job.company.company_name }} | 💰 <strong>{{ item.job.package_lpa }} LPA</strong> | 📍 {{ item.job.location|default:"Flexible" }}
+                                        </div>
+                                        <div style="font-size: 0.8rem; color: #64748b; margin-top: 4px;">
+                                            Min CGPA: {{ item.job.min_cgpa }} | Max Backlogs: {{ item.job.max_backlogs }} | Depts: {{ item.job.eligible_departments }}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        {% if item.already_applied %}
+                                            <span class="badge badge-applied">Applied</span>
+                                        {% elif item.eligible %}
+                                            <form method="post" action="{% url 'apply_job' item.job.id %}">
+                                                {% csrf_token %}
+                                                <button type="submit" class="action-btn primary" style="padding: 6px 14px; font-size: 0.85rem;">Apply Now</button>
+                                            </form>
+                                        {% else %}
+                                            <span class="badge badge-rejected">Ineligible</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </li>
+                        {% empty %}
+                            <li class="empty">No active placement drives available right now.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <div class="panel">
+                    <h3>Recent Placement Notifications</h3>
+                    <ul class="notif-list">
+                        {% for notif in notifications %}
+                            <li class="notif-item {% if not notif.is_read %}unread{% endif %}">
+                                <div>
+                                    <div class="notif-title">{{ notif.title }}</div>
+                                    <div class="notif-msg">{{ notif.message }}</div>
+                                    <div class="notif-time">{{ notif.created_at|date:"M d, Y H:i" }}</div>
+                                </div>
+                            </li>
+                        {% empty %}
+                            <li class="empty">No notifications.</li>
+                        {% endfor %}
+                    </ul>
+                    <div style="margin-top: 12px; text-align: right;">
+                        <a href="{% url 'placement_notifications' %}" style="font-size: 0.88rem; font-weight: 600; color: #3b82f6;">View All Notifications &rarr;</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

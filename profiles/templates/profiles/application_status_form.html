@@ -1,0 +1,57 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - Placement Management</title>
+    <link rel="stylesheet" href="{% static 'profiles/styles.css' %}">
+</head>
+<body>
+    <div class="page-shell">
+        <div class="card">
+            <h2>{{ title }}</h2>
+            <div style="background: #f1f5f9; padding: 14px 16px; border-radius: 12px; margin-bottom: 18px; font-size: 0.9rem;">
+                <div><strong>Student Name:</strong> {{ application.student.user.username }}</div>
+                <div><strong>Job Title:</strong> {{ application.job.title }} ({{ application.job.company.company_name }})</div>
+                <div><strong>Current Status:</strong> <span class="badge badge-shortlisted">{{ application.status }}</span></div>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="error" style="margin-bottom: 14px;">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <div class="form-grid">
+                    <div class="field" style="grid-column: 1 / -1;">
+                        <label for="{{ form.status.id_for_label }}">New Application Status</label>
+                        {{ form.status }}
+                        {% if form.status.errors %}<ul class="errorlist">{% for err in form.status.errors %}<li>{{ err }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+
+                    <div class="field" style="grid-column: 1 / -1;">
+                        <label for="{{ form.interview_date.id_for_label }}">Interview Date & Time (Optional)</label>
+                        {{ form.interview_date }}
+                        {% if form.interview_date.errors %}<ul class="errorlist">{% for err in form.interview_date.errors %}<li>{{ err }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+
+                    <div class="field" style="grid-column: 1 / -1;">
+                        <label for="{{ form.interview_notes.id_for_label }}">Interview Notes & Venue Details</label>
+                        {{ form.interview_notes }}
+                        {% if form.interview_notes.errors %}<ul class="errorlist">{% for err in form.interview_notes.errors %}<li>{{ err }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="primary-btn">Update & Notify Student</button>
+                    <a href="{% url cancel_url %}" class="secondary-btn">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
