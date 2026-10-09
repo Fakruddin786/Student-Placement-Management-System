@@ -39,6 +39,12 @@ select {
 
 button {
   cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+button:hover,
+button:focus-visible {
+  transform: translateY(-1px);
 }
 
 .app-shell {
@@ -96,6 +102,12 @@ button {
   gap: 10px;
   font-weight: 500;
   text-align: left;
+}
+
+.menu-item:hover,
+.menu-item:focus-visible {
+  background: rgba(44, 90, 229, 0.04);
+  color: var(--primary-dark);
 }
 
 .menu-item.active {
@@ -169,15 +181,26 @@ button {
 }
 
 .primary-btn {
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary), #4a7af9);
   color: white;
   box-shadow: 0 10px 20px rgba(44, 90, 229, 0.18);
+}
+
+.primary-btn:hover,
+.primary-btn:focus-visible {
+  box-shadow: 0 14px 24px rgba(44, 90, 229, 0.2);
 }
 
 .ghost-btn {
   background: white;
   color: var(--text);
   border-color: var(--border);
+}
+
+.ghost-btn:hover,
+.ghost-btn:focus-visible {
+  border-color: rgba(44, 90, 229, 0.25);
+  box-shadow: 0 8px 18px rgba(32, 44, 66, 0.05);
 }
 
 .kpi-grid {
@@ -193,6 +216,12 @@ button {
   border-radius: 16px;
   padding: 18px 18px 16px;
   box-shadow: 0 10px 18px var(--shadow);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 22px rgba(32, 44, 66, 0.09);
 }
 
 .kpi-card.primary {
@@ -241,6 +270,12 @@ button {
   border-radius: 18px;
   box-shadow: 0 10px 18px var(--shadow);
   padding: 20px;
+  transition: box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.panel:hover {
+  box-shadow: 0 14px 22px rgba(32, 44, 66, 0.07);
+  border-color: rgba(44, 90, 229, 0.12);
 }
 
 .panel-head {
@@ -275,12 +310,15 @@ select {
   background: var(--panel-soft);
   padding: 11px 12px;
   color: var(--text);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
 }
 
 input:focus,
 select:focus {
-  outline: 2px solid rgba(44, 90, 229, 0.12);
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(44, 90, 229, 0.1);
   border-color: rgba(44, 90, 229, 0.3);
+  background: #ffffff;
 }
 
 .wide {
@@ -302,6 +340,13 @@ select:focus {
   border-radius: 12px;
   padding: 14px 12px;
   background: linear-gradient(180deg, #fbfcff, #f3f5fa);
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.drive-list li:hover {
+  transform: translateY(-1px);
+  border-color: rgba(44, 90, 229, 0.18);
+  box-shadow: 0 10px 20px rgba(32, 44, 66, 0.04);
 }
 
 .drive-item-head {
@@ -352,6 +397,13 @@ select:focus {
   border-radius: 14px;
   background: linear-gradient(180deg, #ffffff, #f7f9ff);
   padding: 16px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.app-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(44, 90, 229, 0.18);
+  box-shadow: 0 12px 20px rgba(32, 44, 66, 0.05);
 }
 
 .app-card-header {
@@ -462,6 +514,33 @@ tbody tr:hover {
 
   .content-grid,
   .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .main-panel {
+    padding: 18px 16px 24px;
+  }
+
+  .topbar,
+  .split-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .top-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .primary-btn,
+  .ghost-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .form-grid {
     grid-template-columns: 1fr;
   }
 }
