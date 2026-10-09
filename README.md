@@ -217,14 +217,74 @@ npm test
 # BAT-34 Data Models & Constraint Tests (10 tests)
 npm run test:bat34
 
-# BAT-35 Job Posting Create & Edit Integration Tests (16 tests)
-npm run test:bat35
+## Frontend URLs
+- / -> root redirect to login or profile
+- /login/
+- /profile/
+- /profile/view/
+- /admin/
 
-# BAT-36 Required Skills & Eligibility Integration Tests (24 tests)
-npm run test:bat36
+## API Endpoints
+- /api/profile/
+- /api/students/ (authenticated alias for the current user's student profile)
+- /api/users/ (staff-only account CRUD; passwords are write-only and hashed)
+- /api/skills/
+- /api/certifications/
+- /api/projects/
+- /api/internships/
+- /api/companies/
+- /api/jobs/
+- /api/placement-drives/
+- /api/applications/
+- /api/interviews/
+- /api/results/
+- /api/notifications/
+- /api/resumes/
 
-# BAT-37 Company Profile View & Edit Integration Tests (21 tests)
-npm run test:bat37
+The student placement workflow is available at `/placements/`. It loads open
+jobs and job/company details from the REST API, submits applications, and shows
+the signed-in student's application statuses. The page uses the existing
+profile stylesheet and requires a student profile to submit an application.
+
+### Placement API and database
+The `placements` app adds the placement domain while reusing Django's configured
+`auth.User` and the existing `profiles.StudentProfile`; it does not create a
+second users or students table. Companies can own jobs and placement drives,
+drives can include multiple jobs, applications link a student to a job and
+optionally a drive, interviews and results belong to applications, notifications
+belong to recipients, and uploaded placement resumes belong to student profiles.
+
+All placement endpoints require authentication. Students can see and manage
+their own applications, notifications, and placement resumes. Company owners
+can manage their company, jobs, drives, and related application outcomes;
+students can list active jobs and drives. Django staff users can administer all
+placement records and manage accounts through `/api/users/`. Company ownership
+is attached to the current built-in user because the active project does not
+configure separate account roles; consequently, any authenticated user can
+register a company, but can only manage companies they own.
+
+The endpoints support DRF's standard list/retrieve/create/update/partial-update/
+delete actions as allowed by ownership. Postman can send JSON to the API routes;
+use Basic Auth with a Django username/password or authenticate with the existing
+Django session. Resume upload uses `multipart/form-data` with a `file` field
+(PDF, DOC, or DOCX, up to 5 MB). The existing server-rendered profile screens
+continue to use their current Django views and database models; placement
+management is exposed through the API and DRF's browsable API.
+
+## Authentication Information
+- Login is required to access protected pages.
+- API access requires authentication.
+- Users can only access their own resources.
+
+## Resume Upload Rules
+- Allowed types: PDF, DOC, DOCX
+- Maximum file size: 5 MB
+- Uploaded files are stored in media/resumes/
+
+## Running Automated Tests
+```bash
+python manage.py test
+```
 
 # BAT-38 Centralized Validation Tests (31 tests)
 npm run test:bat38

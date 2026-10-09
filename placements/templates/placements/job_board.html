@@ -1,0 +1,79 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Placement Opportunities</title>
+    <link rel="stylesheet" href="{% static 'profiles/styles.css' %}">
+    <script src="{% static 'placements/job_board.js' %}" defer></script>
+</head>
+<body>
+    <main class="container"
+          id="placement-app"
+          data-jobs-url="{% url 'job-list' %}"
+          data-job-detail-template="{% url 'job-detail' pk=0 %}"
+          data-company-detail-template="{% url 'company-detail' pk=0 %}"
+          data-applications-url="{% url 'application-list' %}"
+          data-student-id="{{ student_profile_id }}"
+          data-login-url="{% url 'login' %}">
+        <header class="dashboard-header">
+            <div>
+                <h1>Placement Opportunities</h1>
+                <p>Browse available jobs and track your applications.</p>
+            </div>
+            <nav class="header-actions" aria-label="Placement navigation">
+                <a href="{% url 'profile_detail' %}">My Profile</a>
+                <a href="{% url 'logout' %}">Logout</a>
+            </nav>
+        </header>
+
+        <div id="api-message" role="status" aria-live="polite" hidden></div>
+
+        <div class="dashboard">
+            <section class="panel" aria-labelledby="jobs-heading">
+                <h2 id="jobs-heading">Available Jobs</h2>
+                <p id="jobs-loading" class="empty">Loading available jobs…</p>
+                <p id="jobs-empty" class="empty" hidden>No jobs are currently available.</p>
+                <ul id="jobs-list" class="list"></ul>
+            </section>
+
+            <div>
+                <section class="panel" aria-labelledby="job-detail-heading">
+                    <h2 id="job-detail-heading">Job Details</h2>
+                    <p id="job-detail-empty" class="empty">Select a job to see its details.</p>
+                    <div id="job-detail" hidden>
+                        <h3 id="detail-title"></h3>
+                        <p><strong>Company:</strong> <span id="detail-company"></span></p>
+                        <p><strong>Location:</strong> <span id="detail-location"></span></p>
+                        <p><strong>Type:</strong> <span id="detail-type"></span></p>
+                        <p><strong>Minimum CGPA:</strong> <span id="detail-cgpa"></span></p>
+                        <p><strong>Maximum backlogs:</strong> <span id="detail-backlogs"></span></p>
+                        <p><strong>Apply by:</strong> <span id="detail-deadline"></span></p>
+                        <p id="detail-description"></p>
+                        <form id="application-form">
+                            {% csrf_token %}
+                            <div class="field">
+                                <label for="cover-letter">Cover letter (optional)</label>
+                                <textarea id="cover-letter" name="cover_letter" rows="4"></textarea>
+                            </div>
+                            <button id="apply-button" type="submit">Apply for this job</button>
+                            <p id="application-form-error" class="error" role="alert" hidden></p>
+                        </form>
+                        <p id="application-form-profile-hint" hidden>
+                            Complete your <a href="{% url 'profile_form' %}">student profile</a> before applying.
+                        </p>
+                    </div>
+                </section>
+
+                <section class="panel" aria-labelledby="applications-heading">
+                    <h2 id="applications-heading">My Applications</h2>
+                    <p id="applications-loading" class="empty">Loading your applications…</p>
+                    <p id="applications-empty" class="empty" hidden>You have not applied for any jobs yet.</p>
+                    <ul id="applications-list" class="list"></ul>
+                </section>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

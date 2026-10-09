@@ -15,6 +15,7 @@ from .views import (
 
 router = DefaultRouter()
 router.register(r'profile', StudentProfileViewSet, basename='profile')
+router.register(r'students', StudentProfileViewSet, basename='student')
 router.register(r'skills', SkillViewSet, basename='skill')
 router.register(r'certifications', CertificationViewSet, basename='certification')
 router.register(r'projects', ProjectViewSet, basename='project')
