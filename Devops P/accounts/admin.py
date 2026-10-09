@@ -3,13 +3,14 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
 from .models import User
+from .permissions import user_has_permission
 
-admin.site.site_header = 'Admin login'
-admin.site.site_title = 'Admin login'
-admin.site.index_title = 'Admin login'
+class RoleAdminSite(admin.AdminSite):
+	def has_permission(self, request):
+		user = request.user
+		return user.is_staff and user_has_permission(user, 'admin.site.access')
 
 
-@admin.register(User)
 class CustomUserAdmin(UserAdmin):
 	ordering = ('email',)
 	list_display = ('email', 'first_name', 'last_name', 'role', 'is_active', 'is_staff')
@@ -24,3 +25,10 @@ class CustomUserAdmin(UserAdmin):
 	add_fieldsets = (
 		(None, {'classes': ('wide',), 'fields': ('email', 'password1', 'password2', 'role', 'is_staff', 'is_active')}),
 	)
+
+
+role_admin_site = RoleAdminSite(name='admin')
+role_admin_site.site_header = 'Admin login'
+role_admin_site.site_title = 'Admin login'
+role_admin_site.index_title = 'Admin login'
+role_admin_site.register(User, CustomUserAdmin)
